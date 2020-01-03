@@ -1,0 +1,121 @@
+---
+title: "Advanced Visualisation Project"
+author: "Grzegorz Krochmal"
+date: "3 01 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+
+setwd("C:/Users/grzeg/Desktop/studia/Data Science/2 rok/semestr 1/Advanced_VisualisationR/projekt/Adv_Vis_R_Project")
+'17th_data' <- data.frame(readxl::read_xlsx("17th_joined_file.xlsx"))
+'18th_data' <- data.frame(readxl::read_xlsx("18th_joined_file.xlsx"))
+'19th_data' <- data.frame(readxl::read_xlsx("19th_joined_file.xlsx"))
+'20th_data' <- data.frame(readxl::read_xlsx("20th_joined_file.xlsx"))
+authors_data <- data.frame(readxl::read_xlsx("Author_birthplace_with_geo_data.xlsx"))
+```
+
+1. The goal of our project is to compare how the language evolved in four corresponding centuries, from 17th century till 20th century. To achieve this aim we collected books from specific centuries from Project Guttenberg. The initial idea was to get over a dozen of titles for each century based on the list of the most popular books for specific period - www.goodreads.com. However for 20th century we encountered the problem with the availability of titles because of copyrights. That's why books from 20th century are not the most popular ones but only these we could get. Anyway let's see initial comparision of datasets we have. 
+
+## Initial analysis
+
+### Number of Authors vs Number of Titles
+
+```{r echo = FALSE}
+centuries <- c("17th", "18th", "19th", "20th")
+number_of_titles <- c(15, 15, 15, 14)
+
+century_basic <- data.frame(centuries, number_of_titles)
+century_basic <- cbind(century_basic, authors_data %>% group_by(Century) %>% tally(name = "Number of Authors") %>% select_at("Number of Authors"))
+century_basic_long <- melt(century_basic, id=c("centuries"))
+
+ggplot(century_basic_long) + geom_bar(aes(x = centuries, y = value, fill = variable), stat = "identity", position = "dodge", width = 0.7) + 
+  scale_fill_manual("Variable\n", values = c("orange", "blue"), labels = c("Number of Titles", "Number of Authors")) + 
+  ggtitle("Initial Comparison") + 
+  labs(x = "\nCenturies", y = "\nNumber of") + 
+  theme_bw(base_size = 14) 
+  
+```
+
+### Total Number of Words vs Count of Unique Words for each Century
+
+```{r echo = FALSE}
+num_of_occ <- c(sum(`17th_data`$Number.of.occurences), sum(`18th_data`$Number.of.occurences), sum(`19th_data`$Number.of.occurences), sum(`20th_data`$Number.of.occurences))
+
+num_of_unique <- c(length(unique(`17th_data`$Lemma)), length(unique(`18th_data`$Lemma)), length(unique(`19th_data`$Lemma)), length(unique(`20th_data`$Lemma)))
+
+century_basic <- cbind(century_basic, num_of_occ, num_of_unique)
+
+century_basic_long <- melt(century_basic[,c("centuries", "num_of_occ", "num_of_unique")], id=c("centuries"))
+
+ggplot(century_basic_long) + geom_bar(aes(x = centuries, y = value, fill = variable), stat = "identity", position = "dodge", width = 0.7) + 
+  scale_fill_manual("Variable\n", values = c("orange", "blue"), labels = c("Count of All Words", "Count of Unique Words")) + 
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+  ggtitle("All Words vs Unique Words") + 
+  labs(x = "\nCenturies", y = "\nNumber of") + 
+  theme_bw(base_size = 14)
+
+
+```
+
+As we can observe count of unique words in all cases is really low in comparison with count of all words. Therefore this type of plot do not give us much valuable information. It is better to see proportion of both variables
+
+```{r echo = FALSE}
+century_basic <- century_basic %>% mutate(Unique_to_all = round(num_of_unique/num_of_occ,4))
+
+ggplot(century_basic) + geom_bar(aes(x = centuries, y = Unique_to_all), stat = "identity", width = 0.7, fill ="orange") + 
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+  ggtitle("Count of Unique Words to All Words") + 
+  labs(x = "\nCenturies", y = "\nProportion") + 
+  theme_bw(base_size = 14)
+```
+
+We can see that presented proportion is inversly proportional to the stats we could see at the previous plot. However, when interpreting this phenomenon one has to be careful. That is because the data for 18th and 19th century contains much more words than these for 17th and 20th. But what has to be indicated is that when the number of all words is boundless and depends only on number of text analyzed, number of unique words for specific language is limited.
+
+## Part of speech analysis
+
+```{r echo = FALSE}
+`17th_data`$Part_of_speech <- ifelse(`17th_data`$Part_of_speech %in% c("VERB", "ADJ", "ADV", "NOUN"), `17th_data`$Part_of_speech, "Other")
+`18th_data`$Part_of_speech <- ifelse(`18th_data`$Part_of_speech %in% c("VERB", "ADJ", "ADV", "NOUN"), `18th_data`$Part_of_speech, "Other")
+`19th_data`$Part_of_speech <- ifelse(`19th_data`$Part_of_speech %in% c("VERB", "ADJ", "ADV", "NOUN"), `19th_data`$Part_of_speech, "Other")
+`20th_data`$Part_of_speech <- ifelse(`20th_data`$Part_of_speech %in% c("VERB", "ADJ", "ADV", "NOUN"), `20th_data`$Part_of_speech, "Other")
+```
+
+First we will try with pie charts
+```{r echo = FALSE}
+pie_chart <- function(df, title){
+  pie_data <- df %>% group_by(Part_of_speech) %>% summarise(Percentage = round(n()/length(df$Part_of_speech) * 100,2))
+  pie_data <- pie_data %>% mutate(lbls = paste(Part_of_speech, Percentage, "%"))
+  pie(pie_data$Percentage, labels = pie_data$lbls, col = rainbow(length(pie_data$lbls)), 
+      main = title)
+}
+
+par(mfrow=c(2,2), oma = c(0, 0, 2, 0), mai = c(0, 0.1, 0.5, 0.1))
+pie_chart(`17th_data`, "17th Century")
+pie_chart(`18th_data`, "18th Century")
+pie_chart(`19th_data`, "19th Century")
+pie_chart(`20th_data`, "20th Century")
+mtext("Percentage Pie Chart of Parts of Speech for Unique Words", outer = TRUE, cex = 1.5)
+```
+
+Another option would be to use stacked barplots
+```{r echo = FALSE}
+Part_of_speech <- cbind(centuries = c(rep(c("17th"),5), rep(c("18th"),5), rep(c("19th"),5), rep(c("20th"),5)),
+  rbind(data.frame(`17th_data` %>% group_by(Part_of_speech) %>% summarise(Percentage = round(n()/length(`17th_data`$Part_of_speech) * 100,2))),
+      data.frame(`18th_data` %>% group_by(Part_of_speech) %>% summarise(Percentage = round(n()/length(`18th_data`$Part_of_speech) * 100,2))),
+      data.frame(`19th_data` %>% group_by(Part_of_speech) %>% summarise(Percentage = round(n()/length(`19th_data`$Part_of_speech) * 100,2))),
+      data.frame(`20th_data` %>% group_by(Part_of_speech) %>% summarise(Percentage = round(n()/length(`20th_data`$Part_of_speech) * 100,2)))))
+
+
+ggplot(Part_of_speech, aes(x = centuries, y = Percentage, fill = Part_of_speech)) + geom_bar(stat = "identity", position = "stack", width = 0.7) + 
+  scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+  geom_text(aes(label = paste0(Percentage,"%")), 
+            position = position_stack(vjust = 0.5), size = 3) +
+  labs(fill = "Part of Speech") +
+  ggtitle("Parts of Speech Proportions") + 
+  labs(x = "\nCenturies", y = "\nPercentage") + 
+  theme_bw(base_size = 14)   
+```
