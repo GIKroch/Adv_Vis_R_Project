@@ -85,6 +85,7 @@ We can see that presented proportion is inversly proportional to the stats we co
 ```
 
 First we will try with pie charts
+
 ```{r echo = FALSE}
 pie_chart <- function(df, title){
   pie_data <- df %>% group_by(Part_of_speech) %>% summarise(Percentage = round(n()/length(df$Part_of_speech) * 100,2))
@@ -102,6 +103,7 @@ mtext("Percentage Pie Chart of Parts of Speech for Unique Words", outer = TRUE, 
 ```
 
 Another option would be to use stacked barplots
+
 ```{r echo = FALSE}
 Part_of_speech <- cbind(centuries = c(rep(c("17th"),5), rep(c("18th"),5), rep(c("19th"),5), rep(c("20th"),5)),
   rbind(data.frame(`17th_data` %>% group_by(Part_of_speech) %>% summarise(Percentage = round(n()/length(`17th_data`$Part_of_speech) * 100,2))),
