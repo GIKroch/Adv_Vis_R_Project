@@ -24,7 +24,7 @@ authors_data <- data.frame(readxl::read_xlsx("Author_birthplace_with_geo_data.xl
 
 ### Number of Authors vs Number of Titles
 
-```{r echo = FALSE}
+```{r echo = FALSE, out.width="800px", out.height="600px"}
 centuries <- c("17th", "18th", "19th", "20th")
 number_of_titles <- c(15, 15, 15, 14)
 
@@ -42,7 +42,7 @@ ggplot(century_basic_long) + geom_bar(aes(x = centuries, y = value, fill = varia
 
 ### Total Number of Words vs Count of Unique Words for each Century
 
-```{r echo = FALSE}
+```{r echo = FALSE, out.width="800px", out.height="600px"}
 num_of_occ <- c(sum(`17th_data`$Number.of.occurences), sum(`18th_data`$Number.of.occurences), sum(`19th_data`$Number.of.occurences), sum(`20th_data`$Number.of.occurences))
 
 num_of_unique <- c(length(unique(`17th_data`$Lemma)), length(unique(`18th_data`$Lemma)), length(unique(`19th_data`$Lemma)), length(unique(`20th_data`$Lemma)))
@@ -63,7 +63,7 @@ ggplot(century_basic_long) + geom_bar(aes(x = centuries, y = value, fill = varia
 
 As we can observe count of unique words in all cases is really low in comparison with count of all words. Therefore this type of plot do not give us much valuable information. It is better to see proportion of both variables
 
-```{r echo = FALSE}
+```{r echo = FALSE, out.width="800px", out.height="600px"}
 century_basic <- century_basic %>% mutate(Unique_to_all = round(num_of_unique/num_of_occ,4))
 
 ggplot(century_basic) + geom_bar(aes(x = centuries, y = Unique_to_all), stat = "identity", width = 0.7, fill ="orange") + 
@@ -86,7 +86,7 @@ We can see that presented proportion is inversly proportional to the stats we co
 
 First we will try with pie charts
 
-```{r echo = FALSE}
+```{r echo = FALSE, out.width="800px", out.height="600px"}
 pie_chart <- function(df, title){
   pie_data <- df %>% group_by(Part_of_speech) %>% summarise(Percentage = round(n()/length(df$Part_of_speech) * 100,2))
   pie_data <- pie_data %>% mutate(lbls = paste(Part_of_speech, Percentage, "%"))
@@ -104,7 +104,7 @@ mtext("Percentage Pie Chart of Parts of Speech for Unique Words", outer = TRUE, 
 
 Another option would be to use stacked barplots
 
-```{r echo = FALSE}
+```{r echo = FALSE, out.width="800px", out.height="600px"}
 Part_of_speech <- cbind(centuries = c(rep(c("17th"),5), rep(c("18th"),5), rep(c("19th"),5), rep(c("20th"),5)),
   rbind(data.frame(`17th_data` %>% group_by(Part_of_speech) %>% summarise(Percentage = round(n()/length(`17th_data`$Part_of_speech) * 100,2))),
       data.frame(`18th_data` %>% group_by(Part_of_speech) %>% summarise(Percentage = round(n()/length(`18th_data`$Part_of_speech) * 100,2))),
