@@ -6,6 +6,7 @@ setwd("C:/Users/grzeg/Desktop/studia/Data Science/2 rok/semestr 1/Advanced_Visua
 '18th_data' <- readxl::read_xlsx("18th_joined_file.xlsx")
 '19th_data' <- readxl::read_xlsx("19th_joined_file.xlsx")
 '20th_data' <- readxl::read_xlsx("20th_joined_file.xlsx")
+authors_data <- data.frame(readxl::read_xlsx("Author_birthplace_with_geo_data.xlsx"))
 
 ## In our analysis we will focus on 4 main parts of speech -> Adjectives, Adverbs, Nouns, Verbs. Other parts of speech will be treated as the rest
 authors_data %>% group_by(Century) %>% tally(name = "Number of Authors")
@@ -116,3 +117,91 @@ avg_senti_data <- rbind(
 )
 
 avg_senti_data
+
+
+
+
+####################
+
+install.packages("ggmap")
+library(ggmap)
+qmap(location="london")
+
+# first - set the API key for google maps
+# for details check ?register_google
+# https://cloud.google.com/maps-platform/
+
+# PFFFFFFFFFFFFFFFT
+map <- get_map(location = "London", zoom = 8)
+
+
+install.packages("plotly")
+install.packages("maps")
+library(plotly)
+library(maps)
+
+map_data("world", "canada") %>%
+  group_by(group) %>%
+  plot_geo(x = ~long, y = ~lat) %>%
+  add_markers(size = I(1))
+
+Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoiY2ltY2lyaW1jaSIsImEiOiJjazU5ejkwZmQxMjdjM2VxeGdqOGVnMnRkIn0.ZcC-1pGUFVd80U1G0G2yoQ')
+plot_mapbox(maps::canada.cities) %>%
+  add_markers(
+    x = ~long, 
+    y = ~lat, 
+    size = ~pop, 
+    color = ~country.etc,
+    colors = "Accent",
+    text = ~paste(name, pop),
+    hoverinfo = "text"
+  )
+
+
+df = read.csv('https://raw.githubusercontent.com/bcdunbar/datasets/master/meteorites_subset.csv')
+
+p <- df %>%
+  plot_mapbox(lat = ~reclat, lon = ~reclong,
+              split = ~class, size=2,
+              mode = 'scattermapbox', hoverinfo='name') %>%
+  layout(title = 'Meteorites by Class',
+         font = list(color='white'),
+         plot_bgcolor = '#191A1A', paper_bgcolor = '#191A1A',
+         mapbox = list(style = 'dark'),
+         legend = list(orientation = 'h',
+                       font = list(size = 8)),
+         margin = list(l = 25, r = 25,
+                       b = 25, t = 25,
+                       pad = 2)) %>%
+  config(mapboxAccessToken = Sys.getenv("MAPBOX_TOKEN"))
+
+p
+
+
+map_plot <- authors_data %>% 
+  plot_mapbox(lon = ~longitude,
+              lat = ~latitude,
+              split = ~Century,
+              size=2,
+              mode = 'scattermapbox+markers',
+              text=~paste(Author, Birthplace, sep = "\n"),
+              hoverinfo='text',
+              marker=list(opacity=0.67, size=15)) %>% 
+  layout(title = "Birthplace of the most popular authors from 17th to 20th century",
+         mapbox = list(),
+         legend = list(orientation='h', y=0.12),
+         margin = list(l = 25, r = 25,
+                       b = 25, t = 25,
+                       pad = 2)
+         )
+
+map_plot
+
+plot_mapbox(maps::canada.cities)
+plot_mapbox(maps::canada.cities) %>% 
+  add_markers(
+    x = authors_data$longitude,
+    y = authors_data$latitude,
+    text = authors_data$Author
+  )
+

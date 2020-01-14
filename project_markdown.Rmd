@@ -2,23 +2,54 @@
 title: "Advanced Visualisation Project"
 author: "Grzegorz Krochmal"
 date: "3 01 2020"
-output: html_document
+output:
+    rmdformats::readthedown:
+    keywords: 
+    highlight: tango
+    code_folding: hide
+    df_print: paged
+    number_sections: true
+    toc_depth: 5
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
 ---
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
 library(dplyr)
 library(ggplot2)
 library(reshape2)
+library(plotly)
+library(maps)
+library(scales)
 
-setwd("C:/Users/grzeg/Desktop/studia/Data Science/2 rok/semestr 1/Advanced_VisualisationR/projekt/Adv_Vis_R_Project")
-'17th_data' <- data.frame(readxl::read_xlsx("17th_joined_file.xlsx"))
-'18th_data' <- data.frame(readxl::read_xlsx("18th_joined_file.xlsx"))
-'19th_data' <- data.frame(readxl::read_xlsx("19th_joined_file.xlsx"))
-'20th_data' <- data.frame(readxl::read_xlsx("20th_joined_file.xlsx"))
+# Moja propozycja - usunac stopwords z tych baz, bo one i tak nic nie daja
+library(tm)
+
+clean_dataset <- function(dataset){
+  dataset <-  filter(dataset, !Lemma %in% stopwords(kind="en"))
+  dataset <-  filter(dataset, nchar(Lemma) > 1)
+  return(dataset)
+}
+
+#setwd("C:/Users/grzeg/Desktop/studia/Data Science/2 rok/semestr 1/Advanced_VisualisationR/projekt/Adv_Vis_R_Project")
+'17th_data' <- data.frame(readxl::read_xlsx("17th_joined_file.xlsx")) %>% clean_dataset()
+'18th_data' <- data.frame(readxl::read_xlsx("18th_joined_file.xlsx")) %>% clean_dataset()
+'19th_data' <- data.frame(readxl::read_xlsx("19th_joined_file.xlsx")) %>% clean_dataset()
+'20th_data' <- data.frame(readxl::read_xlsx("20th_joined_file.xlsx")) %>% clean_dataset()
+
 authors_data <- data.frame(readxl::read_xlsx("Author_birthplace_with_geo_data.xlsx"))
+
+basic_words <- readLines("basic_words.txt", warn = FALSE) %>% 
+  strsplit(",") %>% unlist() %>% 
+  strsplit(" ") %>% unlist() %>% 
+  strsplit("/") %>% unlist()
+basic_words <- basic_words[nchar(basic_words)>1 & !basic_words %in% stopwords(kind="en")]
 ```
 
-1. The goal of our project is to compare how the language evolved in four corresponding centuries, from 17th century till 20th century. To achieve this aim we collected books from specific centuries from Project Guttenberg. The initial idea was to get over a dozen of titles for each century based on the list of the most popular books for specific period - www.goodreads.com. However for 20th century we encountered the problem with the availability of titles because of copyrights. That's why books from 20th century are not the most popular ones but only these we could get. Anyway let's see initial comparision of datasets we have. 
+The goal of our project is to compare how English language evolved in four corresponding centuries, from 17th century till 20th century. To achieve this aim we collected books from specific centuries from Project Guttenberg. The initial idea was to get over a dozen of titles for each century based on the list of the most popular books for specific period - www.goodreads.com. However for 20th century we encountered the problem with the availability of titles because of copyrights. That's why books from 20th century are not the most popular ones but only these we could get. Anyway, let's see initial comparision of datasets we have. 
 
 ## Initial analysis
 
@@ -61,6 +92,8 @@ ggplot(century_basic_long) + geom_bar(aes(x = centuries, y = value, fill = varia
 
 ```
 
+% KK: A czy tutaj mo¿emy wnioskowaæ, ¿e 18-wieczne ksi¹¿ki s¹ po prostu najd³u¿sze? + oœ lewa bardziej czytelna, np. 100 000, 200 000 itp.. % 
+
 As we can observe count of unique words in all cases is really low in comparison with count of all words. Therefore this type of plot do not give us much valuable information. It is better to see proportion of both variables
 
 ```{r echo = FALSE, out.width="800px", out.height="600px"}
@@ -73,7 +106,10 @@ ggplot(century_basic) + geom_bar(aes(x = centuries, y = Unique_to_all), stat = "
   theme_bw(base_size = 14)
 ```
 
-We can see that presented proportion is inversly proportional to the stats we could see at the previous plot. However, when interpreting this phenomenon one has to be careful. That is because the data for 18th and 19th century contains much more words than these for 17th and 20th. But what has to be indicated is that when the number of all words is boundless and depends only on number of text analyzed, number of unique words for specific language is limited.
+% KK: Zastanawiam siê, co w ogóle oznacza ten stosunek i jakie wnioski mo¿na wyci¹gn¹æ z tego wykresu (z tego co kojarzê, to Æwiakowski k³ad³ doœæ mocny nacisk na to, ¿eby by³y jakieœ wnioski z tego naszego badania). + do wykresu trzeba bêdzie dodaæ na lewej osi skalê w % %
+
+We can see that presented proportion is inversely proportional to the stats we could see at the previous plot. However, when interpreting this phenomenon one has to be careful. That is because the data for 18th and 19th century contains much more words than these for 17th and 20th. But what has to be indicated is that when the number of all words is boundless and depends only on number of text analyzed, number of unique words for specific language is limited.
+
 
 ## Part of speech analysis
 
@@ -120,4 +156,182 @@ ggplot(Part_of_speech, aes(x = centuries, y = Percentage, fill = Part_of_speech)
   ggtitle("Parts of Speech Proportions") + 
   labs(x = "\nCenturies", y = "\nPercentage") + 
   theme_bw(base_size = 14)   
+```
+
+% KK: a mo¿na by jeszcze spróbowaæ takie wykresiki dla nie unique, mo¿e wysz³oby coœ innego? %
+
+
+## Progressive simplification of English language
+
+```{r}
+
+`17th_data`$basic <- ifelse(`17th_data`$Lemma %in% basic_words, TRUE, FALSE)
+`18th_data`$basic <- ifelse(`18th_data`$Lemma %in% basic_words, TRUE, FALSE)
+`19th_data`$basic <- ifelse(`19th_data`$Lemma %in% basic_words, TRUE, FALSE)
+`20th_data`$basic <- ifelse(`20th_data`$Lemma %in% basic_words, TRUE, FALSE)
+
+# # Patrze tak testowo, ktore wyrazy NIGDY nie byly uzyte, a sa basic
+# basic_words[!(basic_words %in% `17th_data`$Lemma) & 
+#               !(basic_words %in% `18th_data`$Lemma) & 
+#               !(basic_words %in% `19th_data`$Lemma) & 
+#               !(basic_words %in% `20th_data`$Lemma)]
+# 
+# basic_words[!(basic_words %in% `17th_data`$Lemma)]
+# basic_words[!(basic_words %in% `18th_data`$Lemma)]
+# basic_words[!(basic_words %in% `19th_data`$Lemma)]
+# basic_words[!(basic_words %in% `20th_data`$Lemma)]
+
+num_of_basic_unique <- c(sum(`17th_data`$basic), sum(`18th_data`$basic), sum(`19th_data`$basic), sum(`20th_data`$basic))
+century_basic$num_of_basic_unique <- num_of_basic_unique 
+num_of_sophisticated_unique <- c(sum(!`17th_data`$basic), sum(!`18th_data`$basic), sum(!`19th_data`$basic), sum(!`20th_data`$basic))
+century_basic$num_of_sophisticated_unique <- num_of_sophisticated_unique
+
+num_of_basic_all <- c(sum(`17th_data`$basic * `17th_data`$Number.of.occurences), sum(`18th_data`$basic * `18th_data`$Number.of.occurences),
+                      sum(`19th_data`$basic * `19th_data`$Number.of.occurences), sum(`20th_data`$basic * `20th_data`$Number.of.occurences))
+num_of_sophisticated_all <- c(sum(ifelse(`17th_data`$basic==TRUE,0,1) * `17th_data`$Number.of.occurences), 
+                              sum(ifelse(`18th_data`$basic==TRUE,0,1) * `18th_data`$Number.of.occurences), 
+                              sum(ifelse(`19th_data`$basic==TRUE,0,1) * `19th_data`$Number.of.occurences), 
+                              sum(ifelse(`20th_data`$basic==TRUE,0,1) * `20th_data`$Number.of.occurences))
+
+century_basic$num_of_basic_all <- num_of_basic_all 
+century_basic$num_of_sophisticated_all <- num_of_sophisticated_all 
+
+
+century_basic_long <- melt(century_basic, id=c("centuries"))
+
+basic_all_words <- century_basic_long %>% 
+  filter(variable %in% c("num_of_sophisticated_all", "num_of_basic_all")) %>% 
+  group_by(centuries) %>% 
+  mutate(relative=value/sum(value))
+
+
+ggplot(data=basic_all_words, aes(x=centuries, y=value, fill=variable)) +
+  geom_bar(stat="identity", position = "fill", width=0.7) +
+  ggtitle('Percentage of basic words in all words in literature throughout ages') +
+  scale_fill_manual("", values = c("orange", "blue"), labels = c("All basic words", "All sophisticated words")) +
+  geom_text(aes(x = centuries, label = percent(relative)), colour = 'white', position="fill", fontface = "bold", vjust=1.5) +
+  scale_y_continuous(labels = function(x) percent(x))+
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.title.y = element_blank())
+
+```
+
+
+
+
+
+
+```{r}
+basic_unique_words <- century_basic_long %>% 
+  filter(variable %in% c("num_of_sophisticated_unique", "num_of_basic_unique")) %>% 
+  group_by(centuries) %>% 
+  mutate(relative=value/sum(value) * 100) %>% 
+  mutate(ypos=cumsum(relative)-relative)
+
+# Basic piechart
+
+ggplot(basic_unique_words, aes(x="", y=value, fill=variable)) +
+  geom_bar(stat="identity", width=1, color="white", position = position_fill()) +
+  ggtitle('Percentage of unique basic words in unique words \nin literature throughout centuries')+
+  coord_polar("y") +
+  geom_text(aes(label = percent(relative/100)), color = "white", size=6, position = position_fill(vjust = 0.5)) +
+  scale_fill_brewer("",palette="Set1", labels=c("Unique basic words", "Unique sophisticated words")) +
+  facet_wrap(facets=. ~ centuries) +
+  #scale_fill_manual("", values = c("orange", "blue"), labels = c("Number of Titles", "Number of Authors")) +
+  theme_void() + 
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank())
+
+```
+
+We can see that 
+
+
+## Positivity
+
+```{r}
+pos_all <- c(sum(`17th_data`$pos * `17th_data`$Number.of.occurences) / sum(`17th_data`$Number.of.occurence), 
+             sum(`18th_data`$pos * `18th_data`$Number.of.occurences) / sum(`18th_data`$Number.of.occurence),
+             sum(`19th_data`$pos * `19th_data`$Number.of.occurences) / sum(`19th_data`$Number.of.occurence), 
+             sum(`20th_data`$pos * `20th_data`$Number.of.occurences) / sum(`20th_data`$Number.of.occurence))
+
+neutr_all <- c(sum(`17th_data`$neu * `17th_data`$Number.of.occurences) / sum(`17th_data`$Number.of.occurence), 
+             sum(`18th_data`$neu * `18th_data`$Number.of.occurences) / sum(`18th_data`$Number.of.occurence),
+             sum(`19th_data`$neu * `19th_data`$Number.of.occurences) / sum(`19th_data`$Number.of.occurence), 
+             sum(`20th_data`$neu * `20th_data`$Number.of.occurences) / sum(`20th_data`$Number.of.occurence))
+
+neg_all <- c(sum(`17th_data`$neg * `17th_data`$Number.of.occurences) / sum(`17th_data`$Number.of.occurence), 
+             sum(`18th_data`$neg * `18th_data`$Number.of.occurences) / sum(`18th_data`$Number.of.occurence),
+             sum(`19th_data`$neg * `19th_data`$Number.of.occurences) / sum(`19th_data`$Number.of.occurence), 
+             sum(`20th_data`$neg * `20th_data`$Number.of.occurences) / sum(`20th_data`$Number.of.occurence))
+
+century_basic$pos_all <- pos_all
+century_basic$neutr_all <- neutr_all
+century_basic$neg_all <- neg_all
+
+positivity <- century_basic %>% melt(id=c("centuries")) %>% filter(variable %in% c("pos_all", "neg_all"))
+
+ggplot(data = positivity, aes(x = centuries, y = value, group = variable)) +
+  geom_line(aes(linetype = factor(variable), color = factor(variable)), size = 2) +
+  theme_bw() +
+  geom_point(size = 3) +
+  scale_y_continuous(labels = function(x) percent(x))
+
+
+
+
+```
+
+## Wordmap
+
+```{r}
+
+library(wordcloud2)
+
+wordFreq <- `17th_data` %>% select(c("Lemma", "Number.of.occurences"))
+colnames(wordFreq) <- c("word", "freq")
+
+wordcloud2(data = wordFreq %>% filter(freq>100))
+
+
+
+#wordcloud2(data = wordFreq %>% filter(freq>100))
+```
+
+```{r}
+xx <- wordFreq %>% filter(freq>200)
+xx$freq <- round(xx$freq/100)
+hw = wordcloud2(data = xx, figPath = "book2.png", size=1)
+hw
+```
+
+
+
+
+## Birthplaces of authors
+
+```{r echo=FALSE, out.width="800px", warning=FALSE}
+Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoiY2ltY2lyaW1jaSIsImEiOiJjazU5ejkwZmQxMjdjM2VxeGdqOGVnMnRkIn0.ZcC-1pGUFVd80U1G0G2yoQ')
+map_plot <- authors_data %>% 
+  plot_mapbox(lon = ~longitude,
+              lat = ~latitude,
+              split = ~Century,
+              size=2,
+              mode = 'scattermapbox+markers',
+              text=~paste(Author, Birthplace, sep = "\n"),
+              hoverinfo='text',
+              marker=list(opacity=0.67, size=15)) %>% 
+  layout(title = "Birthplace of the most popular authors from 17th to 20th century",
+         mapbox = list(),
+         legend = list(orientation='h', y=0.12),
+         margin = list(l = 25, r = 25,
+                       b = 25, t = 25,
+                       pad = 2)
+         )
+
+map_plot
+
+
 ```
