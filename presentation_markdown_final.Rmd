@@ -198,47 +198,11 @@ melt(senti_data) %>% ggplot(aes(x = Centuries, y = value, fill = variable)) + ge
   theme_bw(base_size = 14)
 ```
 
-
-## Sentiment Analysis
-
-
-```{r}
-pos_all <- c(sum(`17th_data`$pos * `17th_data`$Number.of.occurences) / sum(`17th_data`$Number.of.occurence), 
-             sum(`18th_data`$pos * `18th_data`$Number.of.occurences) / sum(`18th_data`$Number.of.occurence),
-             sum(`19th_data`$pos * `19th_data`$Number.of.occurences) / sum(`19th_data`$Number.of.occurence), 
-             sum(`20th_data`$pos * `20th_data`$Number.of.occurences) / sum(`20th_data`$Number.of.occurence))
-
-neutr_all <- c(sum(`17th_data`$neu * `17th_data`$Number.of.occurences) / sum(`17th_data`$Number.of.occurence), 
-             sum(`18th_data`$neu * `18th_data`$Number.of.occurences) / sum(`18th_data`$Number.of.occurence),
-             sum(`19th_data`$neu * `19th_data`$Number.of.occurences) / sum(`19th_data`$Number.of.occurence), 
-             sum(`20th_data`$neu * `20th_data`$Number.of.occurences) / sum(`20th_data`$Number.of.occurence))
-
-neg_all <- c(sum(`17th_data`$neg * `17th_data`$Number.of.occurences) / sum(`17th_data`$Number.of.occurence), 
-             sum(`18th_data`$neg * `18th_data`$Number.of.occurences) / sum(`18th_data`$Number.of.occurence),
-             sum(`19th_data`$neg * `19th_data`$Number.of.occurences) / sum(`19th_data`$Number.of.occurence), 
-             sum(`20th_data`$neg * `20th_data`$Number.of.occurences) / sum(`20th_data`$Number.of.occurence))
-
-century_basic$positive <- pos_all
-century_basic$neutral <- neutr_all
-century_basic$negative <- neg_all
-
-positivity <- century_basic %>% melt(id=c("centuries")) %>% filter(variable %in% c("positive", "negative"))
-
-ggplot(data = positivity, aes(x = centuries, y = value, group = variable)) +
-  geom_line(aes(linetype = factor(variable), color = factor(variable)), size = 2) +
-  theme_bw() +
-  theme(legend.position = "none") +
-  geom_point(size = 3) +
-  scale_y_continuous(labels = function(x) percent(x)) +
-  labs(x = "\nCenturies", y = "\nPercentage") + 
-  geom_label_repel(label.size=NA,
-                   aes(label = variable),
-                  nudge_x = 1,
-                  na.rm = TRUE, data = positivity %>% filter(centuries=="20th"))
-
-```
-
 # Is there progressive simplification of English language?
+
+## Basic English by Charles Kay Ogden
+
+<img src="BASIC2.png" style="height: 340px"/>
 
 ## Use of basic words in literature - analysis of all used words
 
