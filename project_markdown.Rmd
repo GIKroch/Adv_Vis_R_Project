@@ -17,7 +17,6 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
-
 library(dplyr)
 library(ggplot2)
 library(reshape2)
@@ -145,6 +144,8 @@ ggplot(frequency, aes(x = proportion, y = `20th`, color = abs(`20th` - proportio
 
 ### Total Number of Words vs Count of Unique Words for each Century
 
+The eighteenth century is a clear winner in the competition of total number of words. It is also the best in the case of number of unique words. However due to the limited size of our dataset this conclusion cannot be seen as a fully realiable statement. 
+
 ```{r echo = FALSE}
 num_of_occ <- c(sum(`17th_data`$Number.of.occurences), sum(`18th_data`$Number.of.occurences), sum(`19th_data`$Number.of.occurences), sum(`20th_data`$Number.of.occurences))
 
@@ -165,6 +166,8 @@ ggplot(century_basic_long) + geom_bar(aes(x = centuries, y = value, fill = varia
 
 ### Count of Unique Words to All Words
 
+In case of the proportion of count of unique words to all words for each century the first thing which has to be said that the plot is highly connected with the previous one. We can see the relation that centuries with the lowest number of count of words are the ones with the highes proportion score in this case. It brings us to interesting and somehow obvious pattern for probably all languages. Which is that the number of unique words in language is limited. Therefore after some point it does not matter if we increase the size of dataset in case of words, the number of unique will remain the same but the proportion will obviously go down. 
+
 ```{r echo = FALSE}
 century_basic <- century_basic %>% mutate(Unique_to_all = round(num_of_unique/num_of_occ,4))
 
@@ -174,14 +177,10 @@ ggplot(century_basic) + geom_bar(aes(x = centuries, y = Unique_to_all), stat = "
   theme_bw(base_size = 14)
 ```
 
-% KK: Zastanawiam się, co w ogóle oznacza ten stosunek i jakie wnioski można wyciągnąć z tego wykresu (z tego co kojarzę, to Ćwiakowski kładł dość mocny nacisk na to, żeby były jakieś wnioski z tego naszego badania). + do wykresu trzeba będzie dodać na lewej osi skalę w % %
 
-We can see that presented proportion is inversely proportional to the stats we could see at the previous plot. However, when interpreting this phenomenon one has to be careful. That is because the data for 18th and 19th century contains much more words than these for 17th and 20th. But what has to be indicated is that when the number of all words is boundless and depends only on number of text analyzed, number of unique words for specific language is limited.
+## Parts of Speech Analysis
 
-
-## Part of speech analysis
-
-Stacked Barplot with Percentage of Parts of Speech for Unique Words
+Part of Speech and the proportion in which they are present in the text might give us a valuable information about its character. This can be explained with example of comparison of speeches with one coming from somebody who is an extrovert and the other person being an introvert. We can expect that extrovert personality uses more adjectives than introvert one. The next example might be the case when someone talks a lot about itself or other people. So in some way we can detect a narcisstic personality looking at significantly high share of nouns. Unfortunately the results of our analysis at the dataset we used do not bring us highly differntiated results. The most interesting conclusion is the fact that 20th century is the best in all the categories besides 'Others'. What it might indicate is that Stanford NLP library we used for this task got the best performance on this part of dataset because of its most modern character.  
 
 ```{r echo = FALSE, out.width="800px", out.height="600px"}
 `17th_data`$Part_of_speech <- ifelse(`17th_data`$Part_of_speech %in% c("VERB", "ADJ", "ADV", "NOUN"), `17th_data`$Part_of_speech, "Other")
@@ -209,6 +208,8 @@ ggplot(Part_of_speech, aes(x = centuries, y = Percentage, fill = Part_of_speech)
 ## Sentiment analysis
 
 ### Sentiment Type to Sum of All Words
+
+The conclusion regarding to this plot is similar to the previous one. Here the 20th century is the winner in positive in negative classes, having the lowest share in case of neutrality. The neutrality in sentiment analysis is the group with the highest chances that something which is not really neutral will be classified as such because of lack of information for the algorithm.  
 
 ```{r echo = FALSE, message = FALSE}
 senti_data <- rbind(
@@ -308,16 +309,6 @@ grid.arrange(p2, p1, nrow = 2)
 `19th_data`$basic <- ifelse(`19th_data`$Lemma %in% basic_words, TRUE, FALSE)
 `20th_data`$basic <- ifelse(`20th_data`$Lemma %in% basic_words, TRUE, FALSE)
 
-# # Patrze tak testowo, ktore wyrazy NIGDY nie byly uzyte, a sa basic
-# basic_words[!(basic_words %in% `17th_data`$Lemma) & 
-#               !(basic_words %in% `18th_data`$Lemma) & 
-#               !(basic_words %in% `19th_data`$Lemma) & 
-#               !(basic_words %in% `20th_data`$Lemma)]
-# 
-# basic_words[!(basic_words %in% `17th_data`$Lemma)]
-# basic_words[!(basic_words %in% `18th_data`$Lemma)]
-# basic_words[!(basic_words %in% `19th_data`$Lemma)]
-# basic_words[!(basic_words %in% `20th_data`$Lemma)]
 
 num_of_basic_unique <- c(sum(`17th_data`$basic), sum(`18th_data`$basic), sum(`19th_data`$basic), sum(`20th_data`$basic))
 century_basic$num_of_basic_unique <- num_of_basic_unique 
@@ -391,6 +382,8 @@ Finally, we tried to get to know a little more about authors of the books that w
 
 ### Number of Authors vs Number of Titles
 
+This plot is not represantative in the case of understanding differences between language throughout centuries. It gives us deeper look inside the structure of dataset we used. The pattern which we can highlight in this case is connected to the method of book selection. We based it on the ranking of best books. So for 17th century we can state that there are only a few authors whose occured to be time prone and are still popular.  
+
 ```{r echo = FALSE, out.width="800px", out.height="600px"}
 centuries <- c("17th", "18th", "19th", "20th")
 number_of_titles <- c(15, 15, 15, 14)
@@ -406,7 +399,6 @@ ggplot(century_basic_long) + geom_bar(aes(x = centuries, y = value, fill = varia
   
 ```
 
-We can clearly see that in 17th century there was a small number of authors that wrote the most popular books, while later number of authors was almost equal to the number of books.
 
 ### Birthplaces of authors
 
