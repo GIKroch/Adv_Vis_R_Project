@@ -240,6 +240,11 @@ melt(senti_data) %>% ggplot(aes(x = Centuries, y = value, fill = variable)) + ge
 ```
 
 ### Most common positive and negative words
+
+We also anaylysed how much each word contributed to each sentiment in 17th and 20th century (we are mostly interested in these particular ages as they are the first and the last one). We noticed that in 17th century some of the most common negative words revolved around death ('death', 'die') but they are not amongs 10 most frequently used words in 20th century. 
+
+In case of positive words, we can see that the words that concerned religion - like 'heaven' or 'god' were popular in 17th century, but not in 20th century.
+
 ```{r, include=FALSE}
 to_plot <- `20th_data` %>% 
   melt(id.vars = c("Lemma", "Number.of.occurences"), measure.vars = c("neg", "pos")) %>% 
@@ -296,11 +301,17 @@ p2 <- to_plot %>%
 grid.arrange(p2, p1, nrow = 2)
 ```
 
+## Is there a progressive simplification of English language?
 
+Ogden's Basic English is a simplified language created by Charles K. Ogden in 1930. It is based on a theory that 90% of concepts in English language can be explained by only 850 simple words.
 
-## Progressive simplification of English language
+Full list of Ogden's Basic English words can be found here: [http://ogden.basic-english.org/]:http://ogden.basic-english.org/
 
-<img src="BASIC2.png" style="height: 340px"/>
+<img src="BASIC3.png" style="height: 340px"/>
+
+### Use of basic words in literature - analysis of all words
+
+To verify the hypothesis that English has been simplified throughout the ages, we checked how many words used in literature were basic in the terms of Ogden's basic English. There has been an decrease in usage of basic words in 18th century compared to 17th century, but it has increased in 19th and 20th centuries. However, there does not seem to be a strong trend.
 
 ```{r}
 
@@ -348,6 +359,8 @@ ggplot(data=basic_all_words, aes(x=centuries, y=value, fill=variable)) +
 
 ### Use of basic words in literature - analysis of unique words
 
+To make our analysis more thorough, we also checked how many of unique words that were used in literature were basic words. We can see that the biggest percentage of basic words used was during 20th century - however, there is no clear trend and we cannot draw any conclusions about simplification of English language.
+
 ```{r}
 basic_unique_words <- century_basic_long %>% 
   filter(variable %in% c("num_of_sophisticated_unique", "num_of_basic_unique")) %>% 
@@ -371,8 +384,6 @@ ggplot(basic_unique_words, aes(x="", y=value, fill=variable)) +
         axis.title.x = element_blank())
 
 ```
-
-We can see that 
 
 
 
@@ -401,6 +412,8 @@ ggplot(century_basic_long) + geom_bar(aes(x = centuries, y = value, fill = varia
 
 
 ### Birthplaces of authors
+
+The most striking fact about birthplaces of most popular authors is that during 17th and 18th centuries all the influencial authors were born in "Old Europe" - Spain, France, England or Germany. Since 19th century, the distribution became more diverse and we can also observe growing importance of American writers. 
 
 ```{r echo=FALSE, out.width="800px", warning=FALSE}
 Sys.setenv('MAPBOX_TOKEN' = 'pk.eyJ1IjoiY2ltY2lyaW1jaSIsImEiOiJjazU5ejkwZmQxMjdjM2VxeGdqOGVnMnRkIn0.ZcC-1pGUFVd80U1G0G2yoQ')
